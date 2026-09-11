@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard — College Portal</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="topbar">
+    <div class="brand"><span class="crest">C</span> College Portal — Admin</div>
+    <div style="display:flex; align-items:center; gap:16px;">
+        <span class="who">Administrator</span>
+        <button class="btn small secondary" id="logoutBtn" style="color:var(--parchment); border-color:var(--parchment);">Log out</button>
+    </div>
+</div>
+
+<div class="container">
+
+    <div class="admin-nav" id="adminNav">
+        <button data-view="students" class="active">Students</button>
+        <button data-view="courses">Courses</button>
+        <button data-view="enrollments">Enrollments</button>
+        <button data-view="results">Add Result</button>
+        <button data-view="attendance">Mark Attendance</button>
+        <button data-view="reports">Reports</button>
+        <button data-view="notifications">Notifications</button>
+        <button data-view="gpa">GPA Lookup</button>
+    </div>
+
+    <!-- STUDENTS -->
+    <div class="view-panel active" id="view-students">
+        <h2 class="section-title">Students</h2>
+        <p class="section-sub">All students on record. Adding a student here calls the <code>insert_new_student</code> stored procedure.</p>
+
+        <div class="panel">
+            <h3>Add a new student</h3>
+            <form id="addStudentForm">
+                <div class="form-row">
+                    <div class="field"><label>Name</label><input type="text" id="new_student_name" required></div>
+                    <div class="field"><label>Department</label><input type="text" id="new_student_dept" required placeholder="e.g. CSE"></div>
+                    <button type="submit" class="btn small">Add Student</button>
+                </div>
+                <div class="msg" id="addStudentMsg"></div>
+            </form>
+        </div>
+
+        <table class="ledger" id="studentsTable">
+            <thead><tr><th>ID</th><th>Name</th><th>DOB</th><th>Email</th><th>Department</th><th>Actions</th></tr></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- COURSES -->
+    <div class="view-panel" id="view-courses">
+        <h2 class="section-title">Courses & Faculty</h2>
+        <p class="section-sub">Course catalog and teaching faculty</p>
+        <table class="ledger" id="coursesTable">
+            <thead><tr><th>ID</th><th>Name</th><th>Department</th><th>Credits</th><th>Actions</th></tr></thead>
+            <tbody></tbody>
+        </table>
+        <h3 style="font-family:var(--font-display); font-weight:normal; margin-top:28px;">Faculty</h3>
+        <table class="ledger" id="facultyTable">
+            <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Department</th></tr></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- ENROLLMENTS -->
+    <div class="view-panel" id="view-enrollments">
+        <h2 class="section-title">Enrollments</h2>
+        <p class="section-sub">Which students are enrolled in which courses</p>
+
+        <div class="panel">
+            <h3>Enroll a student in a course</h3>
+            <form id="addEnrollmentForm">
+                <div class="form-row">
+                    <div class="field"><label>Student ID</label><input type="number" id="enr_student_id" required></div>
+                    <div class="field"><label>Course ID</label><input type="number" id="enr_course_id" required></div>
+                    <div class="field"><label>Semester</label><input type="text" id="enr_semester" required placeholder="e.g. Fall 2026"></div>
+                    <button type="submit" class="btn small">Enroll</button>
+                </div>
+                <div class="msg" id="addEnrollmentMsg"></div>
+            </form>
+        </div>
+
+        <table class="ledger" id="enrollmentsTable">
+            <thead><tr><th>Student</th><th>Course</th><th>Semester</th><th>Actions</th></tr></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- ADD RESULT (demonstrates update_grade + validate_enrollment triggers) -->
+    <div class="view-panel" id="view-results">
+        <h2 class="section-title">Add a Result</h2>
+        <p class="section-sub">
+            This fires two triggers automatically: <code>update_grade</code> calculates the letter grade from marks,
+            and <code>validate_enrollment</code> blocks the insert if the student isn't enrolled in the course.
+        </p>
+        <div class="panel">
+            <form id="addResultForm">
+                <div class="form-row">
+                    <div class="field"><label>Student ID</label><input type="number" id="res_student_id" required></div>
+                    <div class="field"><label>Course ID</label><input type="number" id="res_course_id" required></div>
+                    <div class="field"><label>Marks</label><input type="number" id="res_marks" min="0" max="100" required></div>
+                    <button type="submit" class="btn small">Submit Result</button>
+                </div>
+                <div class="msg" id="addResultMsg"></div>
+            </form>
+        </div>
+        <table class="ledger" id="resultsTable" style="margin-top:20px;">
+            <thead><tr><th>ID</th><th>Student</th><th>Course</th><th>Marks</th><th>Grade</th><th>Actions</th></tr></thead>
+            <tbody></tbody>
+        </table>
+        <div id="resultOutcome"></div>
+    </div>
+
+    <!-- MARK ATTENDANCE (demonstrates check_low_attendance trigger) -->
+    <div class="view-panel" id="view-attendance">
+        <h2 class="section-title">Mark Attendance</h2>
+        <p class="section-sub">
+            After 5+ recorded classes, if attendance drops below 75%, the <code>check_low_attendance</code> trigger
+            automatically writes a warning to the notifications table — you'll see it appear below if it fires.
+        </p>
+        <div class="panel">
+            <form id="addAttendanceForm">
+                <div class="form-row">
+                    <div class="field"><label>Student ID</label><input type="number" id="att_student_id" required></div>
+                    <div class="field"><label>Course ID</label><input type="number" id="att_course_id" required></div>
+                    <div class="field"><label>Date</label><input type="date" id="att_date" required></div>
+                    <div class="field">
+                        <label>Status</label>
+                        <select id="att_status" style="width:100%; padding:10px 12px; border:1px solid var(--rule); border-radius:3px; background:var(--parchment);">
+                            <option value="Present">Present</option>
+                            <option value="Absent">Absent</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn small">Mark Attendance</button>
+                </div>
+                <div class="msg" id="addAttendanceMsg"></div>
+            </form>
+        </div>
+        <div id="attendanceOutcome"></div>
+    </div>
+
+    <!-- REPORTS (views + attendance report procedure) -->
+    <div class="view-panel" id="view-reports">
+        <h2 class="section-title">Reports</h2>
+        <p class="section-sub">Pulled live from the database views and stored procedure — nothing here is cached.</p>
+
+        <h3 class="section-title" style="font-size:16px;">Department-wise Report <span style="font-weight:normal; font-size:12px; color:var(--slate);">(view: department_student_report)</span></h3>
+        <table class="ledger" id="deptReportTable">
+            <thead><tr><th>Department</th><th>Students</th><th>Avg GPA</th><th>A Students</th><th>A/B Students</th></tr></thead>
+            <tbody></tbody>
+        </table>
+
+        <h3 class="section-title" style="font-size:16px;">Semester Result Summary <span style="font-weight:normal; font-size:12px; color:var(--slate);">(view: semester_result_summary)</span></h3>
+        <table class="ledger" id="semesterReportTable">
+            <thead><tr><th>Course</th><th>Dept</th><th>Enrolled</th><th>Avg Marks</th><th>Min</th><th>Max</th><th>A's</th><th>F's</th></tr></thead>
+            <tbody></tbody>
+        </table>
+
+        <h3 class="section-title" style="font-size:16px;">Course Enrollment Stats <span style="font-weight:normal; font-size:12px; color:var(--slate);">(view: course_enrollment_stats)</span></h3>
+        <table class="ledger" id="enrollmentStatsTable">
+            <thead><tr><th>Course</th><th>Dept</th><th>Credits</th><th>Enrolled</th><th>With Attendance</th><th>With Results</th></tr></thead>
+            <tbody></tbody>
+        </table>
+
+        <div class="panel" style="margin-top:24px;">
+            <h3>Course Attendance Report <span style="font-weight:normal; font-size:12px; color:var(--slate);">(procedure: generate_course_attendance_report)</span></h3>
+            <form id="attReportForm">
+                <div class="form-row">
+                    <div class="field"><label>Course ID</label><input type="number" id="report_course_id" required placeholder="e.g. 105"></div>
+                    <div class="field"><label>Min. Attendance %</label><input type="number" id="report_min_attendance" value="75" required></div>
+                    <button type="submit" class="btn small">Run Report</button>
+                </div>
+            </form>
+            <table class="ledger" id="attReportTable" style="margin-top:14px;">
+                <thead><tr><th>Student</th><th>Present</th><th>Total</th><th>%</th><th>Status</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- NOTIFICATIONS -->
+    <div class="view-panel" id="view-notifications">
+        <h2 class="section-title">Low Attendance Notifications</h2>
+        <p class="section-sub">All warnings ever generated automatically by the check_low_attendance trigger</p>
+        <div id="notifList"></div>
+    </div>
+
+    <!-- GPA LOOKUP -->
+    <div class="view-panel" id="view-gpa">
+        <h2 class="section-title">GPA Lookup</h2>
+        <p class="section-sub">Calls the <code>calculate_student_gpa</code> stored procedure for any student</p>
+        <div class="panel">
+            <form id="gpaLookupForm">
+                <div class="form-row">
+                    <div class="field"><label>Student ID</label><input type="number" id="gpa_student_id" required></div>
+                    <button type="submit" class="btn small">Look up GPA</button>
+                </div>
+            </form>
+            <div id="gpaResult" style="margin-top:12px; font-size:14px;"></div>
+        </div>
+    </div>
+
+</div>
+
+<div class="modal-backdrop hidden" id="editModalBackdrop" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
+        <div class="modal-header">
+            <h3 id="editModalTitle">Edit record</h3>
+            <button type="button" class="btn small secondary" id="closeEditModal">Close</button>
+        </div>
+        <form id="editModalForm">
+            <div id="editModalFields"></div>
+            <div class="modal-actions">
+                <button type="submit" class="btn small">Save changes</button>
+                <button type="button" class="btn small secondary" id="cancelEditModal">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="js/admin.js"></script>
+</body>
+</html>

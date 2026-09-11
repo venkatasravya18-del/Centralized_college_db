@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Centralized College Database System — Login</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="login-wrap">
+    <div class="id-card">
+        <div class="id-card-header">
+            <div class="crest">C</div>
+            <h1>College Portal</h1>
+            <p>Centralized College Database System</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="student">Student</button>
+            <button class="tab" data-tab="admin">Admin</button>
+        </div>
+
+        <!-- Student login -->
+        <div class="tab-panel active" id="panel-student">
+            <form id="studentLoginForm">
+                <div class="field">
+                    <label for="s_id">Student ID</label>
+                    <input type="number" id="s_id" required placeholder="e.g. 1">
+                </div>
+                <div class="field">
+                    <label for="s_email">Email</label>
+                    <input type="email" id="s_email" required placeholder="you@college.edu">
+                </div>
+                <button type="submit" class="btn">Sign in</button>
+                <div class="msg" id="studentMsg"></div>
+            </form>
+        </div>
+
+        <!-- Admin login -->
+        <div class="tab-panel" id="panel-admin">
+            <form id="adminLoginForm">
+                <div class="field">
+                    <label for="a_user">Username</label>
+                    <input type="text" id="a_user" required placeholder="admin">
+                </div>
+                <div class="field">
+                    <label for="a_pass">Password</label>
+                    <input type="password" id="a_pass" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn">Sign in</button>
+                <div class="msg" id="adminMsg"></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="js/login.js"></script>
+</body>
+</html>
